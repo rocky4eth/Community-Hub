@@ -8,41 +8,9 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
-import { createAppKit } from '@reown/appkit/react';
-import { WagmiProvider } from 'wagmi';
-import { arbitrumSepolia } from '@reown/appkit/networks';
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import { WalletProvider } from "../components/WalletProvider";
 
 import appCss from "../styles.css?url";
-
-const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || '';
-const networks = [arbitrumSepolia];
-const wagmiAdapter = new WagmiAdapter({
-  networks,
-  projectId,
-  ssr: true // Set to true because you are using SSR on Vercel
-});
-
-// Only initialize AppKit's Web Components if we are running in the browser
-// if (typeof window !== 'undefined') {
-  createAppKit({
-    adapters: [wagmiAdapter],
-    networks,
-    projectId,
-    metadata: {
-      name: 'EuroApes Connect',
-      description: 'Community Hub for EuroApes',
-      url: 'https://community-hub-sigma.vercel.app/', // Replace with your domain
-      icons: ['https://avatars.githubusercontent.com/u/179229932']
-    },
-    features: {
-      swaps: false,
-      onramp: false,
-      send: false,
-      history: false
-    }
-  });
-// }
 
 function NotFoundComponent() {
   return (
@@ -159,11 +127,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <WalletProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-      </QueryClientProvider>
-    </WagmiProvider>
+       </WalletProvider>
+     </QueryClientProvider>
   );
 }
