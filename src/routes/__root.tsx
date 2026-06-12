@@ -20,26 +20,29 @@ const networks = [arbitrumSepolia];
 const wagmiAdapter = new WagmiAdapter({
   networks,
   projectId,
-  ssr: false // Set to true if you are using Next.js/SSR
+  ssr: true // Set to true because you are using SSR on Vercel
 });
 
-createAppKit({
-  adapters: [wagmiAdapter],
-  networks,
-  projectId,
-  metadata: {
-    name: 'EuroApes Connect',
-    description: 'Community Hub for EuroApes',
-    url: 'https://community-hub-sigma.vercel.app/', // Replace with your domain
-    icons: ['https://avatars.githubusercontent.com/u/179229932']
-  },
-  features: {
-    swaps: false,
-    onramp: false,
-    send: false,
-    history: false
-  }
-});
+// Only initialize AppKit's Web Components if we are running in the browser
+// if (typeof window !== 'undefined') {
+  createAppKit({
+    adapters: [wagmiAdapter],
+    networks,
+    projectId,
+    metadata: {
+      name: 'EuroApes Connect',
+      description: 'Community Hub for EuroApes',
+      url: 'https://community-hub-sigma.vercel.app/', // Replace with your domain
+      icons: ['https://avatars.githubusercontent.com/u/179229932']
+    },
+    features: {
+      swaps: false,
+      onramp: false,
+      send: false,
+      history: false
+    }
+  });
+// }
 
 function NotFoundComponent() {
   return (
