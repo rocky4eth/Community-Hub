@@ -15,7 +15,7 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 
 import appCss from "../styles.css?url";
 
-const projectId = 'b1d09969f700ea1899f3fdfed90c2246';
+const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || '';
 const networks = [arbitrumSepolia];
 const wagmiAdapter = new WagmiAdapter({
   networks,
@@ -32,6 +32,12 @@ createAppKit({
     description: 'Community Hub for EuroApes',
     url: 'https://community-hub-sigma.vercel.app/', // Replace with your domain
     icons: ['https://avatars.githubusercontent.com/u/179229932']
+  },
+  features: {
+    swaps: false,
+    onramp: false,
+    send: false,
+    history: false
   }
 });
 
