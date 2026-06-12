@@ -59,7 +59,7 @@ export function MapScreen() {
       </div>
 
       {active && (
-        <div className="absolute inset-x-0 bottom-0 z-30 animate-fade-up">
+        <div className="absolute inset-x-0 bottom-0 z-[1000] animate-fade-up">
           <div className="mx-3 mb-3 card-surface p-5 grain relative overflow-hidden">
             <div className="flex items-start justify-between">
               <div>
