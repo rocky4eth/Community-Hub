@@ -8,7 +8,32 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { createAppKit } from '@reown/appkit/react';
+import { WagmiProvider } from 'wagmi';
+import { arbitrumSepolia } from '@reown/appkit/networks';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+
 import appCss from "../styles.css?url";
+
+const projectId = 'b1d09969f700ea1899f3fdfed90c2246';
+const networks = [arbitrumSepolia];
+const wagmiAdapter = new WagmiAdapter({
+  networks,
+  projectId,
+  ssr: false // Set to true if you are using Next.js/SSR
+});
+
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks,
+  projectId,
+  metadata: {
+    name: 'EuroApes Connect',
+    description: 'Community Hub for EuroApes',
+    url: 'https://community-hub-sigma.vercel.app/', // Replace with your domain
+    icons: ['https://avatars.githubusercontent.com/u/179229932']
+  }
+});
 
 function NotFoundComponent() {
   return (
@@ -125,9 +150,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-    </QueryClientProvider>
+    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }

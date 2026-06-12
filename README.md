@@ -1,6 +1,6 @@
 # Euroape Connect
 
-This project was generated using Lovable. It is a modern web application built with Vite, React, TypeScript, and Tailwind CSS.
+Euroape Connect is a community hub where verified members can contact each other across different cities, access guides, discover events, and more. It is a modern web application built with Vite, React, TypeScript, and Tailwind CSS.
 
 ## Prerequisites
 
