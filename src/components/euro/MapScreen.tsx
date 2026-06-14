@@ -1,9 +1,12 @@
 import { useMemo, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
-import { cities, members } from "@/lib/mockData";
+import { cities, members, me } from "@/lib/mockData";
 import { ApeAvatar } from "./ApeAvatar";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
+import { CreateProfileButton } from "./CreateProfileButton";
+import { SubmitProfileButton } from "./SubmitProfileButton";
+
 
 function goldDot(count: number) {
   return L.divIcon({
@@ -23,6 +26,7 @@ function Recenter() {
 
 export function MapScreen() {
   const [activeCity, setActiveCity] = useState<string | null>(null);
+  const [composeOpen, setComposeOpen] = useState(false);
 
   const cityMembers = useMemo(() => {
     const m: Record<string, typeof members> = {};
@@ -88,6 +92,62 @@ export function MapScreen() {
           </div>
         </div>
       )}
+
+      {!active && (
+        <CreateProfileButton
+          onClick={() => setComposeOpen(true)}
+        />
+      )}
+
+      {composeOpen && (
+        <Compose
+          onClose={() => setComposeOpen(false)}
+          onSubmit={(p) => {
+            setComposeOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function Compose({ onClose, onSubmit }: { onClose: () => void; onSubmit: (p: Omit<Post, "id" | "memberId" | "postedAt">) => void }) {
+  const [city, setCity] = useState(me.city);
+  const [message, setMessage] = useState("");
+
+  const selectedCityData = cities.find((c) => c.name === city);
+  const country = selectedCityData?.country || "Unknown";
+
+  return (
+    <div className="fixed inset-0 z-[5000] bg-background/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+      <div className="w-full max-w-[400px] card-surface p-5 animate-fade-up grain relative">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-xl text-gold">Create Profile</h3>
+          <button onClick={onClose} className="text-muted-foreground"><X size={18} /></button>
+        </div>
+        <label className="block mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">City</label>
+        <select
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="mt-1 w-full bg-background border border-border rounded-md px-3 py-2 text-sm"
+        >
+          {cities.map((c) => <option key={c.name}>{c.name}</option>)}
+        </select>
+        <label className="block mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Bio</label>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={4}
+          className="mt-1 w-full bg-background border border-border rounded-md px-3 py-2 text-sm resize-none"
+          placeholder="Tell us a bit about yourself..."
+        />
+        <SubmitProfileButton
+          city={city}
+          country={country}
+          message={message}
+          onComplete={onClose}
+        />
+      </div>
     </div>
   );
 }
