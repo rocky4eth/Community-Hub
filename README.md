@@ -24,8 +24,8 @@ If your Lovable project uses an external backend like Supabase, you will need to
 2. Add your environment variables (e.g., Supabase credentials).
 
 ```env
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VERCEL_OIDC_TOKEN=oidc-token-from-vercel
+VITE_REOWN_PROJECT_ID=your-project-id
 ```
 *Note: `.env.local` is in `.gitignore` by default and should never be committed.*
 
@@ -44,8 +44,29 @@ npm run build
 ```
 This will generate a `dist/` directory containing the compiled JavaScript and CSS assets ready for deployment.
 
-## Working with Lovable and GitHub
+## Smart Contracts
 
-If this repository is connected to Lovable:
-* **Automatic Sync**: Any commits pushed to the `main` branch will automatically sync into the Lovable browser editor within seconds.
-* **Avoiding Conflicts**: Always run `git pull` before starting a local editing session. If both you and the Lovable AI edit the same file without pulling first, you may encounter merge conflicts.
+The project includes the implementation of the following core smart contracts:
+* `EuroApeProfile.sol`
+* `EuroApeNoticeboard.sol`
+* `EuroApeBadges.sol`
+
+### Deployed Addresses (Arbitrum Sepolia)
+* **EuroApeProfile**: `0xa50a2CdD0dC80b9D2544068EB8a36da13Ce56e18`
+* **EuroApeNoticeboard**: `0xeA3A88d36Ba4699c26ac9D44EEe5A1b34890D7eb`
+* **EuroApeBadges**: `0x3abc612bd4D091646917359D5c9cE7445259eEAb`
+
+To compile and deploy the smart contracts, use the included Hardhat configuration. Run the following commands:
+
+1. Clean the Hardhat cache and artifacts:
+```bash
+npx hardhat clean
+```
+2. Compile the smart contracts:
+```bash
+npx hardhat compile
+```
+3. Deploy the contracts to the Arbitrum Sepolia network:
+```bash
+npx hardhat run scripts/deploy.js --network arbitrumSepolia
+```
