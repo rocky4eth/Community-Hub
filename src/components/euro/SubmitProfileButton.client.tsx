@@ -20,6 +20,10 @@ export function SubmitProfileButton({
   const formatAddress = (addr?: string) =>
     addr ? `${addr.slice(0, 4)}…${addr.slice(-4)}` : "";
 
+  // TODO: In a production app, you would upload the `message` (bio) to IPFS
+  // or your backend here and pass the resulting CID as the metadataURI.
+  const metadataURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1898";
+
   // If your contract reverts for non-existent profiles, `profile` will be undefined.
   // If it returns an empty struct, you might need to check a specific field like:
   // const hasProfile = profile && (profile as any).city !== "";
@@ -43,10 +47,6 @@ export function SubmitProfileButton({
       open(); // Prompt user to connect wallet first if they aren't
       return;
     }
-
-    // TODO: In a production app, you would upload the `message` (bio) to IPFS
-    // or your backend here and pass the resulting CID as the metadataURI.
-    const metadataURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1898";
 
     createProfile(city, country, metadataURI);
   };
