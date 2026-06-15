@@ -49,7 +49,7 @@ export function BoardScreen() {
               style={{ animationDelay: `${i * 50}ms` }}
             >
               <div className="flex items-center gap-3">
-                <ApeAvatar emoji={m.avatar} size={38} />
+                <ApeAvatar imageUrl={m.avatar} size={38} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{m.name}</p>
                   <p className="text-[11px] text-muted-foreground">{timeAgo(p.postedAt)}</p>

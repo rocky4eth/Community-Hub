@@ -54,7 +54,7 @@ function Leaderboard() {
             >
               {i + 1}
             </div>
-            <ApeAvatar emoji={m.avatar} size={40} />
+            <ApeAvatar imageUrl={m.avatar} size={40} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{m.name}</p>
               <p className="text-[11px] text-muted-foreground">{m.city}</p>
