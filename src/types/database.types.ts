@@ -19,6 +19,11 @@ export interface Database {
           bio: string | null
           metadata_uri: string
           verified: boolean
+          name: string | null
+          guide: boolean | null
+          connections: number | null
+          answered: number | null
+          cities: number | null
         }
         Insert: {
           id?: string
@@ -29,6 +34,11 @@ export interface Database {
           bio?: string | null
           metadata_uri: string
           verified?: boolean
+          name?: string | null
+          guide?: boolean | null
+          connections?: number | null
+          answered?: number | null
+          cities?: number | null
         }
         Update: {
           id?: string
@@ -39,6 +49,11 @@ export interface Database {
           bio?: string | null
           metadata_uri?: string
           verified?: boolean
+          name?: string | null
+          guide?: boolean | null
+          connections?: number | null
+          answered?: number | null
+          cities?: number | null
         }
         Relationships: []
       }

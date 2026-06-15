@@ -3,10 +3,12 @@ import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import { cities } from "@/lib/mockData";
 import { ApeAvatar } from "./ApeAvatar";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 import { CreateProfileButton } from "./CreateProfileButton";
 import { SubmitProfileButton } from "./SubmitProfileButton";
 import { supabase } from "@/lib/supabase";
+import {fetchNftMetadataImage} from "@/lib/metadata.ts";
+import { getAllProfiles } from "@/services/profile";
 
 
 function goldDot(count: number) {
@@ -31,9 +33,8 @@ export function MapScreen() {
   const [profiles, setProfiles] = useState<any[]>([]);
 
   const fetchProfiles = useCallback(async () => {
-    const { data, error } = await supabase.from("profiles").select("*");
-    if (error) console.error("Error fetching profiles:", error);
-    else setProfiles(data || []);
+    const data = await getAllProfiles();
+    setProfiles(data);
   }, []);
 
   useEffect(() => {
@@ -100,16 +101,7 @@ export function MapScreen() {
             </div>
             <ul className="mt-4 space-y-2 max-h-64 overflow-y-auto pr-1">
               {cityMembers[active.name]?.map((m) => (
-                <li key={m.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-2/60 transition">
-                  <ApeAvatar emoji="🦍" size={36} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate font-mono">{m.wallet_address.slice(0, 6)}...{m.wallet_address.slice(-4)}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{m.bio || "No bio provided"}</p>
-                  </div>
-                  {m.verified && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-gold/50 text-gold uppercase tracking-wider">Verified</span>
-                  )}
-                </li>
+                <MemberListItem key={m.id} member={m} />
               ))}
             </ul>
           </div>
@@ -149,13 +141,41 @@ export function MapScreen() {
   );
 }
 
-type ProfileSubmissionData = {
+export type ProfileSubmissionData = {
   city: string;
   country: string;
   bio: string;
   wallet_address: string;
   metadata_uri: string;
 };
+
+function MemberListItem({ member }: { member: any }) {
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadAvatar = async () => {
+      if (!member.metadata_uri) return;
+      const url = await fetchNftMetadataImage(member.metadata_uri);
+      if (isMounted) setAvatarUrl(url);
+    };
+    loadAvatar();
+    return () => { isMounted = false; };
+  }, [member.metadata_uri]);
+
+  return (
+    <li className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-2/60 transition">
+      <ApeAvatar imageUrl={avatarUrl} size={36} />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate font-mono">{member.wallet_address.slice(0, 6)}...{member.wallet_address.slice(-4)}</p>
+        <p className="text-[11px] text-muted-foreground truncate">{member.bio || "No bio provided"}</p>
+      </div>
+      {member.verified && (
+        <span className="text-[10px] px-2 py-0.5 rounded-full border border-gold/50 text-gold uppercase tracking-wider">Verified</span>
+      )}
+    </li>
+  );
+}
 
 function Compose({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: ProfileSubmissionData) => void }) {
   const [city, setCity] = useState(cities[0]?.name || "London");

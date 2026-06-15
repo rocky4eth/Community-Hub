@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createClientOnlyFn } from "@tanstack/react-start";
 import { ProfileSubmissionData } from "./MapScreen.tsx"
 
-interface SubmitProfileButtonProps {
+export interface SubmitProfileButtonProps {
   city: string;
   country: string;
   bio: string;

@@ -1,15 +1,12 @@
-import { useAppKit } from "@reown/appkit/react";
 import { useAccount } from "wagmi";
 import { useEuroApeProfile } from "../../hooks/useEuroApeProfile";
 import { Plus } from "lucide-react";
-import { useEffect } from "react";
 import { CreateProfileButtonProps } from './CreateProfileButton.tsx'
 
 
 export function CreateProfileButton({
   onClick
 }: CreateProfileButtonProps) {
-  const { open } = useAppKit();
   const { address, isConnected } = useAccount();
   const { isConfirmed, profile } = useEuroApeProfile(address);
 

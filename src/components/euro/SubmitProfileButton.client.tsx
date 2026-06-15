@@ -1,7 +1,6 @@
 import { useAppKit } from "@reown/appkit/react";
 import { useAccount } from "wagmi";
 import { useEuroApeProfile } from "../../hooks/useEuroApeProfile";
-import { Plus } from "lucide-react";
 import { useEffect } from "react";
 import { SubmitProfileButtonProps } from './SubmitProfileButton.tsx'
 import { ProfileSubmissionData } from "./MapScreen.tsx"
@@ -15,7 +14,7 @@ export function SubmitProfileButton({
 }: SubmitProfileButtonProps) {
   const { open } = useAppKit();
   const { address, isConnected } = useAccount();
-  const { createProfile, isPending, isConfirming, isConfirmed, profile, isProfileLoading } = useEuroApeProfile(address);
+  const { createProfile, isPending, isConfirming, isConfirmed, profile } = useEuroApeProfile(address);
 
   const formatAddress = (addr?: string) =>
     addr ? `${addr.slice(0, 4)}…${addr.slice(-4)}` : "";

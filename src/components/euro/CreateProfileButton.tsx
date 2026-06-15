@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createClientOnlyFn } from "@tanstack/react-start";
 
-interface CreateProfileButtonProps {
+export interface CreateProfileButtonProps {
   onClick: () => void;
 }
 
