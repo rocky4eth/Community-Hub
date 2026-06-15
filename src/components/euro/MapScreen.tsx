@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
-import { cities, members, me } from "@/lib/mockData";
+import { cities } from "@/lib/mockData";
 import { ApeAvatar } from "./ApeAvatar";
 import { Plus, X } from "lucide-react";
 import { CreateProfileButton } from "./CreateProfileButton";
 import { SubmitProfileButton } from "./SubmitProfileButton";
+import { supabase } from "@/lib/supabase";
 
 
 function goldDot(count: number) {
@@ -27,12 +28,34 @@ function Recenter() {
 export function MapScreen() {
   const [activeCity, setActiveCity] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
+  const [profiles, setProfiles] = useState<any[]>([]);
+
+  const fetchProfiles = useCallback(async () => {
+    const { data, error } = await supabase.from("profiles").select("*");
+    if (error) console.error("Error fetching profiles:", error);
+    else setProfiles(data || []);
+  }, []);
+
+  useEffect(() => {
+    fetchProfiles();
+
+    // Listen for real-time inserts/updates on the profiles table
+    const channel = supabase.channel('public:profiles')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchProfiles();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchProfiles]);
 
   const cityMembers = useMemo(() => {
-    const m: Record<string, typeof members> = {};
-    for (const c of cities) m[c.name] = members.filter((mem) => mem.city === c.name);
+    const m: Record<string, any[]> = {};
+    for (const c of cities) m[c.name] = profiles.filter((mem) => mem.city === c.name);
     return m;
-  }, []);
+  }, [profiles]);
 
   const active = cities.find((c) => c.name === activeCity);
 
@@ -51,7 +74,7 @@ export function MapScreen() {
             attribution='&copy; OpenStreetMap'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
-          {cities.map((c) => (
+          {cities.filter((c) => cityMembers[c.name]?.length > 0).map((c) => (
             <Marker
               key={c.name}
               position={[c.lat, c.lng]}
@@ -76,15 +99,15 @@ export function MapScreen() {
               </button>
             </div>
             <ul className="mt-4 space-y-2 max-h-64 overflow-y-auto pr-1">
-              {cityMembers[active.name].map((m) => (
+              {cityMembers[active.name]?.map((m) => (
                 <li key={m.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-2/60 transition">
-                  <ApeAvatar emoji={m.avatar} size={36} />
+                  <ApeAvatar emoji="🦍" size={36} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{m.name}</p>
-                    <p className="text-[11px] font-mono text-muted-foreground">{m.wallet}</p>
+                    <p className="text-sm font-medium truncate font-mono">{m.wallet_address.slice(0, 6)}...{m.wallet_address.slice(-4)}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{m.bio || "No bio provided"}</p>
                   </div>
-                  {m.isCityGuide && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-gold/50 text-gold uppercase tracking-wider">Guide</span>
+                  {m.verified && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-gold/50 text-gold uppercase tracking-wider">Verified</span>
                   )}
                 </li>
               ))}
@@ -102,7 +125,22 @@ export function MapScreen() {
       {composeOpen && (
         <Compose
           onClose={() => setComposeOpen(false)}
-          onSubmit={(p) => {
+          onSubmit={async (profileData) => {
+            const { error } = await supabase.from("profiles").insert({
+              wallet_address: profileData.wallet_address,
+              city: profileData.city,
+              country: profileData.country,
+              bio: profileData.bio,
+              metadata_uri: profileData.metadata_uri,
+            });
+
+            if (error) {
+              console.error("Error saving profile to Supabase:", error);
+            } else {
+              // Manually trigger a refresh for instant feedback
+              fetchProfiles();
+            }
+
             setComposeOpen(false);
           }}
         />
@@ -111,9 +149,17 @@ export function MapScreen() {
   );
 }
 
-function Compose({ onClose, onSubmit }: { onClose: () => void; onSubmit: (p: Omit<Post, "id" | "memberId" | "postedAt">) => void }) {
-  const [city, setCity] = useState(me.city);
-  const [message, setMessage] = useState("");
+type ProfileSubmissionData = {
+  city: string;
+  country: string;
+  bio: string;
+  wallet_address: string;
+  metadata_uri: string;
+};
+
+function Compose({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: ProfileSubmissionData) => void }) {
+  const [city, setCity] = useState(cities[0]?.name || "London");
+  const [bio, setBio] = useState("");
 
   const selectedCityData = cities.find((c) => c.name === city);
   const country = selectedCityData?.country || "Unknown";
@@ -135,8 +181,8 @@ function Compose({ onClose, onSubmit }: { onClose: () => void; onSubmit: (p: Omi
         </select>
         <label className="block mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Bio</label>
         <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
           rows={4}
           className="mt-1 w-full bg-background border border-border rounded-md px-3 py-2 text-sm resize-none"
           placeholder="Tell us a bit about yourself..."
@@ -144,8 +190,8 @@ function Compose({ onClose, onSubmit }: { onClose: () => void; onSubmit: (p: Omi
         <SubmitProfileButton
           city={city}
           country={country}
-          message={message}
-          onComplete={onClose}
+          bio={bio}
+          onComplete={onSubmit}
         />
       </div>
     </div>

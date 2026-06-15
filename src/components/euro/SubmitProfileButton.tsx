@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { createClientOnlyFn } from "@tanstack/react-start";
+import { ProfileSubmissionData } from "./MapScreen.tsx"
 
 interface SubmitProfileButtonProps {
   city: string;
   country: string;
-  message: string;
-  onComplete: () => void;
+  bio: string;
+  onComplete: (data: ProfileSubmissionData) => void;
 }
 
 const loadSubmitProfileButton = createClientOnlyFn(() =>

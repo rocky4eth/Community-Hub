@@ -70,3 +70,23 @@ npx hardhat compile
 ```bash
 npx hardhat run scripts/deploy.js --network arbitrumSepolia
 ```
+
+## Supabase Database Migrations
+
+To apply the database schema to your Supabase project, use the Supabase CLI. Run the following commands in your terminal: 
+1. Log in to your Supabase account: 
+
+```bash
+npx supabase login
+```
+2. Link your local project to your Supabase project (replace [project_id] with your actual project reference ID): 
+
+```bash
+npx supabase link --project-ref [project_id]
+```
+
+3. Push the local migrations to your remote database: 
+
+```bash
+npx supabase db push
+```

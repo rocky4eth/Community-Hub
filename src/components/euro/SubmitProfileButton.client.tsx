@@ -4,12 +4,13 @@ import { useEuroApeProfile } from "../../hooks/useEuroApeProfile";
 import { Plus } from "lucide-react";
 import { useEffect } from "react";
 import { SubmitProfileButtonProps } from './SubmitProfileButton.tsx'
+import { ProfileSubmissionData } from "./MapScreen.tsx"
 
 
 export function SubmitProfileButton({
   city,
   country,
-  message,
+  bio,
   onComplete
 }: SubmitProfileButtonProps) {
   const { open } = useAppKit();
@@ -27,7 +28,13 @@ export function SubmitProfileButton({
   // Close the modal automatically when the transaction finishes successfully
   useEffect(() => {
     if (isConfirmed) {
-      onComplete();
+      onComplete({
+        city,
+        country,
+        bio,
+        wallet_address: address,
+        metadata_uri: metadataURI
+      } as ProfileSubmissionData);
     }
   }, [isConfirmed, onComplete]);
 
@@ -39,16 +46,15 @@ export function SubmitProfileButton({
 
     // TODO: In a production app, you would upload the `message` (bio) to IPFS
     // or your backend here and pass the resulting CID as the metadataURI.
-    const metadataURI = "ipfs://YOUR_METADATA_URI_HERE";
+    const metadataURI = "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/1898";
 
-    createProfile(country, city, metadataURI);
+    createProfile(city, country, metadataURI);
   };
 
   return (
     <button
-      disabled={!message.trim()}
+      disabled={!bio.trim() || isPending || isConfirming}
       onClick={handleClick}
-      disabled={isPending || isConfirming}
       className="mt-5 w-full bg-gold text-background font-semibold text-sm tracking-[0.14em] uppercase py-3 rounded-full disabled:opacity-40 gold-glow"
     >
     {!isConnected
