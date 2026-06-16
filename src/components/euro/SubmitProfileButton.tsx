@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { createClientOnlyFn } from "@tanstack/react-start";
-import { ProfileSubmissionData } from "./MapScreen.tsx"
+import { ProfileSubmissionData } from "./ProfilePopup.tsx"
 
 export interface SubmitProfileButtonProps {
-  city: string;
-  country: string;
-  bio: string;
+  isEditing: boolean,
+  data: ProfileSubmissionData,
   onComplete: (data: ProfileSubmissionData) => void;
 }
 

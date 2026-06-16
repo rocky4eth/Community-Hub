@@ -76,12 +76,35 @@ export const EURO_APE_PROFILE_ABI = [
             "type": "uint256"
           }
         ],
-        "internalType": "struct EuroApeProfile.Profile",
-        "name": "",
-        "type": "tuple"
+        internalType: "struct EuroApeProfile.Profile",
+        name: "",
+        type: "tuple"
       }
     ],
     stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      {
+        "internalType": "string",
+        "name": "city",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "country",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      }
+    ],
+    name: "updateProfile",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function"
   },
 ] as const;
@@ -103,6 +126,15 @@ export function useEuroApeProfile(userAddress?: `0x${string}`) {
     });
   };
 
+  const handleUpdateProfile = (city: string, country: string, metadataURI: string) => {
+    writeContract({
+      address: EURO_APE_PROFILE_ADDRESS,
+      abi: EURO_APE_PROFILE_ABI,
+      functionName: "updateProfile",
+      args: [city, country, metadataURI], 
+    });
+  };
+
   // Reactive hook to fetch the profile data automatically when userAddress is provided
   const {
     data: profile,
@@ -120,6 +152,7 @@ export function useEuroApeProfile(userAddress?: `0x${string}`) {
 
   return {
     createProfile: handleCreateProfile,
+    updateProfile: handleUpdateProfile,
     isPending,
     isConfirming,
     isConfirmed,

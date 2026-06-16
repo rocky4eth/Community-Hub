@@ -1,11 +1,12 @@
 import { supabase } from "@/lib/supabase";
+import type { Database } from "@/types/database.types"; // Adjust path if your types are located elsewhere
 
 export async function getProfileByAddress(address: string) {
   try {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("wallet_address", address)
+      .eq("wallet_address", address.toLowerCase())
       .single();
 
     if (error && error.code !== "PGRST116") { // PGRST116 is Supabase's "No rows found" error
@@ -20,7 +21,7 @@ export async function getProfileByAddress(address: string) {
   }
 }
 
-export async function getAllProfiles() {
+export async function getAllProfiles(): Promise<any[]> {
   try {
     const { data, error } = await supabase.from("profiles").select("*");
     if (error) {
@@ -31,5 +32,36 @@ export async function getAllProfiles() {
   } catch (err) {
     console.error("Failed to fetch all database profiles:", err);
     return [];
+  }
+}
+
+export async function saveProfile(profileData: Database["public"]["Tables"]["profiles"]["Insert"]): Promise<void> {
+  try {
+    const { error } = await supabase.from("profiles").insert(profileData);
+    if (error) {
+      console.error("Error saving profile to Supabase:", error);
+    }
+  } catch (err) {
+    console.error("Exception when saving profile:", err);
+  }
+}
+
+export async function updateProfile(address: string, profileData: Database["public"]["Tables"]["profiles"]["Update"]): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        name: profileData.name,
+        city: profileData.city,
+        country: profileData.country,
+        bio: profileData.bio,
+        guide: profileData.guide
+      })
+      .eq("wallet_address", address.toLowerCase())
+    if (error) {
+      console.error("Error updating profile in Supabase:", error);
+    }
+  } catch (err) {
+    console.error("Exception when updating profile:", err);
   }
 }

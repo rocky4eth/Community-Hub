@@ -1,5 +1,5 @@
 import { useAccount } from "wagmi";
-import { useEuroApeProfile } from "../../hooks/useEuroApeProfile";
+import { useEuroApeProfile } from "@/hooks/useEuroApeProfile.ts";
 import { Plus } from "lucide-react";
 import { CreateProfileButtonProps } from './CreateProfileButton.tsx'
 
@@ -20,7 +20,7 @@ export function CreateProfileButton({
       {isConnected && !hasProfile && !isConfirmed && (
         <button
           onClick={() => onClick()}
-          className="absolute bottom-12 left-6 z-[1000] h-12 w-12 rounded-full bg-gold text-background flex items-center justify-center gold-glow pulse-gold"
+          className="absolute bottom-12 left-6 z-1000 h-12 w-12 rounded-full bg-gold text-background flex items-center justify-center gold-glow pulse-gold"
           aria-label="Create profile"
         >
           <Plus size={22} />

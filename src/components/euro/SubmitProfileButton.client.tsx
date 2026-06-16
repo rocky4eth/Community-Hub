@@ -1,23 +1,18 @@
 import { useAppKit } from "@reown/appkit/react";
 import { useAccount } from "wagmi";
-import { useEuroApeProfile } from "../../hooks/useEuroApeProfile";
+import { useEuroApeProfile } from "@/hooks/useEuroApeProfile.ts";
 import { useEffect } from "react";
 import { SubmitProfileButtonProps } from './SubmitProfileButton.tsx'
-import { ProfileSubmissionData } from "./MapScreen.tsx"
 
 
 export function SubmitProfileButton({
-  city,
-  country,
-  bio,
+  isEditing = false,
+  data,
   onComplete
 }: SubmitProfileButtonProps) {
   const { open } = useAppKit();
   const { address, isConnected } = useAccount();
-  const { createProfile, isPending, isConfirming, isConfirmed, profile } = useEuroApeProfile(address);
-
-  const formatAddress = (addr?: string) =>
-    addr ? `${addr.slice(0, 4)}…${addr.slice(-4)}` : "";
+  const { createProfile, updateProfile, isPending, isConfirming, isConfirmed, profile } = useEuroApeProfile(address);
 
   // TODO: In a production app, you would upload the `message` (bio) to IPFS
   // or your backend here and pass the resulting CID as the metadataURI.
@@ -31,13 +26,7 @@ export function SubmitProfileButton({
   // Close the modal automatically when the transaction finishes successfully
   useEffect(() => {
     if (isConfirmed) {
-      onComplete({
-        city,
-        country,
-        bio,
-        wallet_address: address,
-        metadata_uri: metadataURI
-      } as ProfileSubmissionData);
+      onComplete(data);
     }
   }, [isConfirmed, onComplete]);
 
@@ -47,12 +36,16 @@ export function SubmitProfileButton({
       return;
     }
 
-    createProfile(city, country, metadataURI);
+    if (isEditing) {
+      updateProfile(data.city, data.country, metadataURI)
+    } else {
+      createProfile(data.city, data.country, metadataURI);
+    }
   };
 
   return (
     <button
-      disabled={!bio.trim() || isPending || isConfirming}
+      disabled={!data.bio.trim() || isPending || isConfirming}
       onClick={handleClick}
       className="mt-5 w-full bg-gold text-background font-semibold text-sm tracking-[0.14em] uppercase py-3 rounded-full disabled:opacity-40 gold-glow"
     >

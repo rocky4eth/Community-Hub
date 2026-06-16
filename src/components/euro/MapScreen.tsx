@@ -5,10 +5,10 @@ import { cities } from "@/lib/mockData";
 import { ApeAvatar } from "./ApeAvatar";
 import { X } from "lucide-react";
 import { CreateProfileButton } from "./CreateProfileButton";
-import { SubmitProfileButton } from "./SubmitProfileButton";
 import { supabase } from "@/lib/supabase";
 import {fetchNftMetadataImage} from "@/lib/metadata.ts";
-import { getAllProfiles } from "@/services/profile";
+import { getAllProfiles, saveProfile } from "@/services/profile";
+import { ProfilePopup } from "./ProfilePopup";
 
 
 function goldDot(count: number) {
@@ -32,7 +32,7 @@ export function MapScreen() {
   const [composeOpen, setComposeOpen] = useState(false);
   const [profiles, setProfiles] = useState<any[]>([]);
 
-  const fetchProfiles = useCallback(async () => {
+  const fetchProfiles: () => Promise<void> = useCallback(async (): Promise<void> => {
     const data = await getAllProfiles();
     setProfiles(data);
   }, []);
@@ -115,24 +115,18 @@ export function MapScreen() {
       )}
 
       {composeOpen && (
-        <Compose
+        <ProfilePopup
           onClose={() => setComposeOpen(false)}
           onSubmit={async (profileData) => {
-            const { error } = await supabase.from("profiles").insert({
-              wallet_address: profileData.wallet_address,
+            await saveProfile({
+              wallet_address: profileData.wallet_address.toLowerCase(),
               city: profileData.city,
               country: profileData.country,
               bio: profileData.bio,
               metadata_uri: profileData.metadata_uri,
             });
 
-            if (error) {
-              console.error("Error saving profile to Supabase:", error);
-            } else {
-              // Manually trigger a refresh for instant feedback
-              fetchProfiles();
-            }
-
+            fetchProfiles();
             setComposeOpen(false);
           }}
         />
@@ -140,14 +134,6 @@ export function MapScreen() {
     </div>
   );
 }
-
-export type ProfileSubmissionData = {
-  city: string;
-  country: string;
-  bio: string;
-  wallet_address: string;
-  metadata_uri: string;
-};
 
 function MemberListItem({ member }: { member: any }) {
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -174,46 +160,5 @@ function MemberListItem({ member }: { member: any }) {
         <span className="text-[10px] px-2 py-0.5 rounded-full border border-gold/50 text-gold uppercase tracking-wider">Verified</span>
       )}
     </li>
-  );
-}
-
-function Compose({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: ProfileSubmissionData) => void }) {
-  const [city, setCity] = useState(cities[0]?.name || "London");
-  const [bio, setBio] = useState("");
-
-  const selectedCityData = cities.find((c) => c.name === city);
-  const country = selectedCityData?.country || "Unknown";
-
-  return (
-    <div className="fixed inset-0 z-[5000] bg-background/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-      <div className="w-full max-w-[400px] card-surface p-5 animate-fade-up grain relative">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display text-xl text-gold">Create Profile</h3>
-          <button onClick={onClose} className="text-muted-foreground"><X size={18} /></button>
-        </div>
-        <label className="block mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">City</label>
-        <select
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          className="mt-1 w-full bg-background border border-border rounded-md px-3 py-2 text-sm"
-        >
-          {cities.map((c) => <option key={c.name}>{c.name}</option>)}
-        </select>
-        <label className="block mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Bio</label>
-        <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          rows={4}
-          className="mt-1 w-full bg-background border border-border rounded-md px-3 py-2 text-sm resize-none"
-          placeholder="Tell us a bit about yourself..."
-        />
-        <SubmitProfileButton
-          city={city}
-          country={country}
-          bio={bio}
-          onComplete={onSubmit}
-        />
-      </div>
-    </div>
   );
 }
