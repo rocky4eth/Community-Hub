@@ -26,7 +26,11 @@ export function SubmitProfileButton({
   // Close the modal automatically when the transaction finishes successfully
   useEffect(() => {
     if (isConfirmed) {
-      onComplete(data);
+      onComplete({
+        ...data,
+        metadata_uri: metadataURI,
+        wallet_address: address || ""
+      });
     }
   }, [isConfirmed, onComplete]);
 

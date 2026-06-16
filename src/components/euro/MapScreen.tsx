@@ -119,10 +119,12 @@ export function MapScreen() {
           onClose={() => setComposeOpen(false)}
           onSubmit={async (profileData) => {
             await saveProfile({
-              wallet_address: profileData.wallet_address.toLowerCase(),
+              name: profileData.name,
               city: profileData.city,
               country: profileData.country,
               bio: profileData.bio,
+              guide: profileData.guide,
+              wallet_address: profileData.wallet_address.toLowerCase(),
               metadata_uri: profileData.metadata_uri,
             });
 
