@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import {fetchNftMetadataImage} from "@/lib/metadata.ts";
 import { getAllProfiles, saveProfile } from "@/services/profile";
 import { ProfilePopup } from "./ProfilePopup";
+import { ProfileView } from "@/components/euro/ProfileView.tsx";
 
 
 function goldDot(count: number) {
@@ -31,6 +32,7 @@ export function MapScreen() {
   const [activeCity, setActiveCity] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [showProfile, setShowProfile] = useState<string | null>(null);
 
   const fetchProfiles: () => Promise<void> = useCallback(async (): Promise<void> => {
     const data = await getAllProfiles();
@@ -87,7 +89,7 @@ export function MapScreen() {
       </div>
 
       {active && (
-        <div className="absolute inset-x-0 bottom-0 z-[1000] animate-fade-up">
+        <div className="absolute inset-x-0 bottom-0 z-1000 animate-fade-up">
           <div className="mx-3 mb-3 card-surface p-5 grain relative overflow-hidden">
             <div className="flex items-start justify-between">
               <div>
@@ -101,7 +103,14 @@ export function MapScreen() {
             </div>
             <ul className="mt-4 space-y-2 max-h-64 overflow-y-auto pr-1">
               {cityMembers[active.name]?.map((m) => (
-                <MemberListItem key={m.id} member={m} />
+                <MemberListItem 
+                  key={m.id} 
+                  member={m} 
+                  onClick={() => {
+                    setShowProfile(m.wallet_address);
+                    setActiveCity(null);
+                  }} 
+                />
               ))}
             </ul>
           </div>
@@ -133,11 +142,22 @@ export function MapScreen() {
           }}
         />
       )}
+
+      {showProfile && (
+        <ProfileView
+            address={showProfile}
+            onClose={() => {
+              setActiveCity(null);
+              setShowProfile(null);
+            }}
+        />
+      )}
+
     </div>
   );
 }
 
-function MemberListItem({ member }: { member: any }) {
+function MemberListItem({ member, onClick }: { member: any; onClick?: () => void }) {
   const [avatarUrl, setAvatarUrl] = useState<string>("");
 
   useEffect(() => {
@@ -152,11 +172,14 @@ function MemberListItem({ member }: { member: any }) {
   }, [member.metadata_uri]);
 
   return (
-    <li className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-2/60 transition">
+    <li 
+      onClick={onClick}
+      className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-2/60 transition cursor-pointer"
+    >
       <ApeAvatar imageUrl={avatarUrl} size={36} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate font-mono">{member.wallet_address.slice(0, 6)}...{member.wallet_address.slice(-4)}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{member.bio || "No bio provided"}</p>
+        <p className="text-sm font-medium truncate font-mono">{member.name || "No bio provided"}</p>
+        <p className="text-[11px] text-muted-foreground truncate">{member.wallet_address.slice(0, 6)}...{member.wallet_address.slice(-4)}</p>
       </div>
       {member.verified && (
         <span className="text-[10px] px-2 py-0.5 rounded-full border border-gold/50 text-gold uppercase tracking-wider">Verified</span>

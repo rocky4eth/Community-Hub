@@ -24,7 +24,7 @@ const subtitle: Record<Tab, string> = {
   map: "🌍 Europe",
   board: "Noticeboard",
   rep: "Reputation",
-  profile: "My EuroApe",
+  profile: "My Profile",
 };
 
 function Index() {
