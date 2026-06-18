@@ -6,7 +6,6 @@ import { ApeAvatar } from "./ApeAvatar";
 import { X } from "lucide-react";
 import { CreateProfileButton } from "./CreateProfileButton";
 import { supabase } from "@/lib/supabase";
-import {fetchNftMetadataImage} from "@/lib/metadata.ts";
 import { getAllProfiles, saveProfile } from "@/services/profile";
 import { ProfilePopup } from "./ProfilePopup";
 import { ProfileView } from "@/components/euro/ProfileView.tsx";
@@ -75,7 +74,8 @@ export function MapScreen() {
           <Recenter />
           <TileLayer
             attribution='&copy; OpenStreetMap'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            // url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           />
           {cities.filter((c) => cityMembers[c.name]?.length > 0).map((c) => (
             <Marker
@@ -126,19 +126,22 @@ export function MapScreen() {
       {composeOpen && (
         <ProfilePopup
           onClose={() => setComposeOpen(false)}
-          onSubmit={async (profileData) => {
+          onSubmit={async (submittedData) => {
             await saveProfile({
-              name: profileData.name,
-              city: profileData.city,
-              country: profileData.country,
-              bio: profileData.bio,
-              guide: profileData.guide,
-              wallet_address: profileData.wallet_address.toLowerCase(),
-              metadata_uri: profileData.metadata_uri,
+              name: submittedData.name,
+              city: submittedData.city,
+              country: submittedData.country,
+              bio: submittedData.bio,
+              guide: submittedData.guide,
+              wallet_address: submittedData.wallet_address?.toLowerCase() || "",
+              metadata_uri: submittedData.metadata_uri || "",
+              avatar_url: submittedData.avatar_url
             });
 
             fetchProfiles();
             setComposeOpen(false);
+            setActiveCity(null);
+            setShowProfile(null);
           }}
         />
       )}
@@ -158,25 +161,12 @@ export function MapScreen() {
 }
 
 function MemberListItem({ member, onClick }: { member: any; onClick?: () => void }) {
-  const [avatarUrl, setAvatarUrl] = useState<string>("");
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadAvatar = async () => {
-      if (!member.metadata_uri) return;
-      const url = await fetchNftMetadataImage(member.metadata_uri);
-      if (isMounted) setAvatarUrl(url);
-    };
-    loadAvatar();
-    return () => { isMounted = false; };
-  }, [member.metadata_uri]);
-
   return (
     <li 
       onClick={onClick}
       className="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-2/60 transition cursor-pointer"
     >
-      <ApeAvatar imageUrl={avatarUrl} size={36} />
+      <ApeAvatar imageUrl={member.avatar_url} size={36} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate font-mono">{member.name || "No bio provided"}</p>
         <p className="text-[11px] text-muted-foreground truncate">{member.wallet_address.slice(0, 6)}...{member.wallet_address.slice(-4)}</p>

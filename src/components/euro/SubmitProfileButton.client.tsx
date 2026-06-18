@@ -29,7 +29,8 @@ export function SubmitProfileButton({
       onComplete({
         ...data,
         metadata_uri: metadataURI,
-        wallet_address: address || ""
+        wallet_address: address || "",
+        avatar_url: "https://assets.boredapeyachtclub.com/bayc/1898.png"
       });
     }
   }, [isConfirmed, onComplete]);

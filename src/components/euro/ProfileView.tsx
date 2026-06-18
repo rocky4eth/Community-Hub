@@ -24,18 +24,6 @@ export function ProfileView({ address, onClose }: ProfileViewProps) {
 
   const [city, setCity] = useState(contractProfile?.city || "Berlin");
   const [country, setCountry] = useState(contractProfile?.country || "DE");
-  const [metadataURI, setMetadataURI] = useState(contractProfile?.metadataURI || "");
-
-  useEffect(() => {
-    const loadAvatar = async () => {
-      if (!metadataURI) return;
-
-      const imageUrl = await fetchNftMetadataImage(metadataURI);
-      setAvatarUrl(imageUrl);
-    };
-
-    loadAvatar();
-  }, [contractProfile?.metadataURI]);
 
   useEffect(() => {
     const fetchSupabaseProfile = async () => {
@@ -46,6 +34,7 @@ export function ProfileView({ address, onClose }: ProfileViewProps) {
         setName(data.name || "");
         setBio(data.bio || "");
         setGuide(data.guide ?? false);
+        setAvatarUrl(data.avatar_url || "");
         setStats({
           connections: data.connections || 0,
           answered: data.answered || 0,

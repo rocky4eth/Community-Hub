@@ -4,7 +4,6 @@ import { cities } from "@/lib/mockData";
 import { ApeAvatar } from "./ApeAvatar";
 import { Copy, MapPin, Handshake, Pencil } from "lucide-react";
 import { useEuroApeProfile } from "@/hooks/useEuroApeProfile";
-import { fetchNftMetadataImage } from "@/lib/metadata";
 import {getProfileByAddress, updateProfile} from "@/services/profile";
 import { ProfilePopup } from "./ProfilePopup";
 
@@ -24,24 +23,6 @@ export function ProfileScreen() {
 
   const [city, setCity] = useState(contractProfile?.city || "Berlin");
   const [country, setCountry] = useState(contractProfile?.country || "DE");
-  const [metadataURI, setMetadataURI] = useState(contractProfile?.metadataURI || "");
-
-  // const profileName = name || "Anonymous Ape";
-  // const profileCity = contractProfile?.city || "Berlin";
-  // const profileCountry = contractProfile?.country || "DE";
-  // const profileURI  = contractProfile?.metadataURI;
-  // const profileAvatar = avatarUrl || "";
-
-  useEffect(() => {
-    const loadAvatar = async () => {
-      if (!metadataURI) return;
-
-      const imageUrl = await fetchNftMetadataImage(metadataURI);
-      setAvatarUrl(imageUrl);
-    };
-
-    loadAvatar();
-  }, [contractProfile?.metadataURI]);
 
   useEffect(() => {
     const fetchSupabaseProfile = async () => {
@@ -52,6 +33,7 @@ export function ProfileScreen() {
         setName(data.name || "");
         setBio(data.bio || "");
         setGuide(data.guide ?? false);
+        setAvatarUrl(data.avatar_url || "");
         setStats({
           connections: data.connections || 0,
           answered: data.answered || 0,
@@ -174,9 +156,7 @@ export function ProfileScreen() {
             city,
             country,
             bio,
-            metadata_uri: metadataURI || "",
-            guide,
-            wallet_address: address || "",
+            guide
           }}
           onClose={() => setIsEditing(false)}
           onSubmit={async (profileData) => {
@@ -184,12 +164,10 @@ export function ProfileScreen() {
 
             await updateProfile(address, {
               name: profileData.name,
-              wallet_address: address,
               city: profileData.city,
               country: profileData.country,
               bio: profileData.bio,
-              guide: profileData.guide || false,
-              metadata_uri: profileData.metadata_uri || contractProfile?.metadataURI || "",
+              guide: profileData.guide || false
             });
 
             setBio(profileData.bio);

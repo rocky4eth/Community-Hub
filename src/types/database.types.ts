@@ -24,6 +24,7 @@ export interface Database {
           connections: number | null
           answered: number | null
           cities: number | null
+          avatar_url: string | null
         }
         Insert: {
           id?: string
@@ -39,6 +40,7 @@ export interface Database {
           connections?: number | null
           answered?: number | null
           cities?: number | null
+          avatar_url?: string | null
         }
         Update: {
           id?: string
@@ -54,6 +56,7 @@ export interface Database {
           connections?: number | null
           answered?: number | null
           cities?: number | null
+          avatar_url?: string | null
         }
         Relationships: []
       }

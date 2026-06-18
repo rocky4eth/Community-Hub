@@ -8,9 +8,10 @@ export type ProfileSubmissionData = {
   city: string;
   country: string;
   bio: string;
-  wallet_address: string;
-  metadata_uri: string;
   guide: boolean;
+  wallet_address?: string;
+  metadata_uri?: string;
+  avatar_url?: string;
 };
 
 type ProfilePopupParams = {
@@ -25,8 +26,6 @@ export function ProfilePopup({ isEditing = false, existingData, onClose, onSubmi
   const [bio, setBio] = useState(existingData?.bio || "");
   const [guide, setGuide] = useState(existingData?.guide ?? false);
   const [name, setName] = useState(existingData?.name || "");
-  const [address, setAddress] = useState(existingData?.wallet_address || "");
-  const [metadataURI, setMetadataURI] = useState(existingData?.metadata_uri || "");
 
   const selectedCityData = cities.find((c) => c.name === city);
   const country = selectedCityData?.country || "Unknown";
@@ -84,9 +83,7 @@ export function ProfilePopup({ isEditing = false, existingData, onClose, onSubmi
             country,
             bio,
             guide,
-            name,
-            wallet_address: address,
-            metadata_uri: metadataURI
+            name
           }}
           onComplete={onSubmit}
         />
