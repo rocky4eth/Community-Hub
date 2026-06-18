@@ -8,15 +8,15 @@ import {getProfileByAddress, updateProfile} from "@/services/profile";
 import { ProfilePopup } from "./ProfilePopup";
 
 export function ProfileScreen() {
-  const { address } = useAccount();
   const [guide, setGuide] = useState(true);
   const [bio, setBio] = useState("");
   const [copied, setCopied] = useState(false);
   const [stats, setStats] = useState({ connections: 0, answered: 0, cities: 0 });
   const [name, setName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-
   const [isEditing, setIsEditing] = useState(false);
+
+  const { address } = useAccount();
 
   // Fetch profile data from your custom hook
   const { profile: contractProfile } = useEuroApeProfile(address);
@@ -47,6 +47,17 @@ export function ProfileScreen() {
 
   const displayCity = cities.find((c) => c.name === city) || { name: city, country, flag: "🌍" };
   const displayAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
+
+  if (!address || !name) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-center p-4">
+        <div>
+          <h2 className="font-display text-2xl">No Access</h2>
+          <p className="text-muted-foreground mt-2">Please connect your wallet and create a profile.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 animate-fade-up pb-24 px-4">
