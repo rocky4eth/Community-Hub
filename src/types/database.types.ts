@@ -25,6 +25,7 @@ export interface Database {
           answered: number | null
           cities: number | null
           avatar_url: string | null
+          txid: string
         }
         Insert: {
           id?: string
@@ -41,11 +42,9 @@ export interface Database {
           answered?: number | null
           cities?: number | null
           avatar_url?: string | null
+          txid: string
         }
         Update: {
-          id?: string
-          created_at?: string
-          wallet_address?: string
           city?: string
           country?: string
           bio?: string | null
@@ -57,6 +56,33 @@ export interface Database {
           answered?: number | null
           cities?: number | null
           avatar_url?: string | null
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          id: string
+          created_at: string
+          author_address: string
+          type: 'REQUEST' | 'OFFER'
+          city: string
+          message: string
+          txid: string
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          author_address: string
+          type: 'REQUEST' | 'OFFER'
+          city: string
+          message: string
+          txid: string
+        }
+        Update: {
+          id?: string
+          type?: 'REQUEST' | 'OFFER'
+          city?: string
+          message?: string
         }
         Relationships: []
       }

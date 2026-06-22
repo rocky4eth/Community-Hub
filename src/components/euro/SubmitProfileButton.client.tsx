@@ -12,7 +12,7 @@ export function SubmitProfileButton({
 }: SubmitProfileButtonProps) {
   const { open } = useAppKit();
   const { address, isConnected } = useAccount();
-  const { createProfile, updateProfile, isPending, isConfirming, isConfirmed, profile } = useEuroApeProfile(address);
+  const { createProfile, updateProfile, isPending, isConfirming, isConfirmed, profile, hash } = useEuroApeProfile(address);
 
   // TODO: In a production app, you would upload the `message` (bio) to IPFS
   // or your backend here and pass the resulting CID as the metadataURI.
@@ -25,15 +25,16 @@ export function SubmitProfileButton({
 
   // Close the modal automatically when the transaction finishes successfully
   useEffect(() => {
-    if (isConfirmed) {
+    if (isConfirmed && hash) {
       onComplete({
         ...data,
         metadata_uri: metadataURI,
         wallet_address: address || "",
-        avatar_url: "https://assets.boredapeyachtclub.com/bayc/1898.png"
+        avatar_url: "https://assets.boredapeyachtclub.com/bayc/1898.png",
+        txid: hash || ""
       });
     }
-  }, [isConfirmed, onComplete]);
+  }, [isConfirmed, hash, onComplete]);
 
   const handleClick = () => {
     if (!isConnected) {

@@ -1,7 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/types/database.types"; // Adjust path if your types are located elsewhere
 
-export async function getProfileByAddress(address: string) {
+export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+
+export async function getProfileByAddress(address: string): Promise<ProfileRow | null> {
   try {
     const { data, error } = await supabase
       .from("profiles")

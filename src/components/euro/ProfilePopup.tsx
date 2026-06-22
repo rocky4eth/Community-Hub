@@ -12,6 +12,7 @@ export type ProfileSubmissionData = {
   wallet_address?: string;
   metadata_uri?: string;
   avatar_url?: string;
+  txid?: string;
 };
 
 type ProfilePopupParams = {

@@ -160,5 +160,6 @@ export function useEuroApeProfile(userAddress?: `0x${string}`) {
     profile,
     isProfileLoading,
     handleGetProfile,
+    hash
   };
 }
