@@ -3,7 +3,7 @@ import { useAccount } from "wagmi";
 import { cities, timeAgo } from "@/lib/mockData";
 import { ApeAvatar } from "./ApeAvatar";
 import { Plus, X } from "lucide-react";
-import { getPosts, savePost } from "@/services/post";
+import { getPosts, savePost, deletePost } from "@/services/post";
 import { getAllProfiles } from "@/services/profile";
 import { fetchNftMetadataImage } from "@/lib/metadata";
 import {NoticeType, useEuroApeNoticeboard} from "@/hooks/useEuroApeNoticeboard";
@@ -17,8 +17,9 @@ export function BoardScreen() {
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [composeOpen, setComposeOpen] = useState(false);
   const [userCity, setUserCity] = useState("London");
-  const { createNotice, isPending, isConfirming, isConfirmed, error, hash } = useEuroApeNoticeboard();
+  const { createNotice, closeNotice, isPending, isConfirming, isConfirmed, error, hash, createdNoticeId } = useEuroApeNoticeboard();
   const [pendingPost, setPendingPost] = useState<{ type: string; city: string; message: string } | null>(null);
+  const [deletingPost, setDeletingPost] = useState<any>(null);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
@@ -46,36 +47,57 @@ export function BoardScreen() {
 
   // Handle database save after successful blockchain confirmation
   useEffect(() => {
-    if (isConfirmed && pendingPost && address && hash) {
-      const saveToDb = async () => {
-        const { error: dbError, data } = await savePost({
-          author_address: address,
-          type: pendingPost.type as "REQUEST" | "OFFER",
-          city: pendingPost.city,
-          message: pendingPost.message,
-          txid: hash
-        });
-        
-        if (!dbError && data) {
-          setPosts((prev) => [data, ...prev]);
-          setComposeOpen(false);
-        } else {
-          console.error(dbError);
-          setAlertMessage("Failed to create post in database.");
-        }
-        setPendingPost(null);
-      };
-      saveToDb();
+    if (isConfirmed && hash) {
+      if (pendingPost && address && createdNoticeId) {
+        const saveToDb = async () => {
+          const { error: dbError, data } = await savePost({
+            author_address: address,
+            type: pendingPost.type as "REQUEST" | "OFFER",
+            city: pendingPost.city,
+            message: pendingPost.message,
+            txid: hash,
+            notice_id: createdNoticeId
+          });
+          
+          if (!dbError && data) {
+            setPosts((prev) => [data, ...prev]);
+            setComposeOpen(false);
+          } else {
+            console.error(dbError);
+            setAlertMessage("Failed to create post in database.");
+          }
+          setPendingPost(null);
+        };
+        saveToDb();
+      } else if (deletingPost) {
+        const removeDb = async () => {
+          const { error: dbError } = await deletePost(deletingPost.id, hash);
+          if (!dbError) {
+            setPosts((prev) => prev.filter(p => p.id !== deletingPost.id));
+          } else {
+            console.error(dbError);
+            setAlertMessage("Failed to delete post in database.");
+          }
+          setDeletingPost(null);
+        };
+        removeDb();
+      }
     }
-  }, [isConfirmed, pendingPost, address]);
+  }, [isConfirmed, pendingPost, deletingPost, address, hash, createdNoticeId]);
 
   // Handle blockchain transaction error or cancellation
   useEffect(() => {
-    if (error && pendingPost) {
-      console.error("Blockchain transaction failed:", error);
-      setPendingPost(null);
+    if (error) {
+      if (pendingPost) {
+        console.error("Blockchain transaction failed:", error);
+        setPendingPost(null);
+      }
+      if (deletingPost) {
+        console.error("Blockchain transaction failed:", error);
+        setDeletingPost(null);
+      }
     }
-  }, [error, pendingPost]);
+  }, [error, pendingPost, deletingPost]);
 
   const filtered = useMemo(() => {
     return posts.filter((p) => {
@@ -108,7 +130,18 @@ export function BoardScreen() {
         {filtered.map((p, i) => {
           const profile = profiles[p.author_address?.toLowerCase()] || {};
           return (
-            <PostItem key={p.id} post={p} profile={profile} index={i} />
+            <PostItem 
+              key={p.id} 
+              post={p} 
+              profile={profile} 
+              index={i} 
+              isAuthor={address?.toLowerCase() === p.author_address?.toLowerCase()}
+              isDeleting={deletingPost?.id === p.id && (isPending || isConfirming)}
+              onDelete={() => {
+                setDeletingPost(p);
+                closeNotice(BigInt(p.notice_id || 0)); // Replace notice_id with your numeric on-chain ID field
+              }}
+            />
           );
         })}
       </ul>
@@ -136,7 +169,7 @@ export function BoardScreen() {
         <Compose
           defaultCity={userCity}
           onClose={() => setComposeOpen(false)}
-          isSubmitting={isPending || isConfirming || pendingPost !== null}
+          isSubmitting={pendingPost !== null}
           onSubmit={(p) => {
             if (!address) {
               setAlertMessage("Please connect your wallet to post.");
@@ -151,7 +184,7 @@ export function BoardScreen() {
       )}
 
       {alertMessage && (
-        <div className="fixed inset-0 z-[60] bg-background/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-60 bg-background/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-[320px] card-surface p-6 animate-fade-up grain relative text-center flex flex-col items-center">
             <h3 className="font-display text-2xl text-gold mb-3">Notice</h3>
             <p className="text-sm text-foreground/90 mb-6">{alertMessage}</p>
@@ -168,7 +201,16 @@ export function BoardScreen() {
   );
 }
 
-function PostItem({ post, profile, index }: { post: any; profile: any; index: number }) {
+type PostItemParams = {
+  post: any;
+  profile: any;
+  index: number;
+  isAuthor: boolean;
+  isDeleting: boolean;
+  onDelete: () => void
+}
+
+function PostItem({ post, profile, index, isAuthor, isDeleting, onDelete }: PostItemParams) {
   const isReq = post.type === "REQUEST";
   const [avatarUrl, setAvatarUrl] = useState("");
 
@@ -209,10 +251,21 @@ function PostItem({ post, profile, index }: { post: any; profile: any; index: nu
         </span>
       </div>
       <p className="mt-3 text-[15px] leading-relaxed text-foreground/90">{post.message}</p>
-      <div className="mt-4 flex justify-end">
-        <button className="text-xs tracking-[0.16em] uppercase border border-gold/50 text-gold px-3 py-1.5 rounded-full hover:bg-gold/10 transition">
-          Respond
-        </button>
+      <div className="mt-4 flex justify-end gap-2">
+        {isAuthor && (
+          <button 
+            onClick={onDelete}
+            disabled={isDeleting}
+            className="text-xs tracking-[0.16em] uppercase border border-red-500/50 text-red-500 px-3 py-1.5 rounded-full hover:bg-red-500/10 transition disabled:opacity-50"
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
+        )}
+        {!isAuthor && (
+          <button className="text-xs tracking-[0.16em] uppercase border border-gold/50 text-gold px-3 py-1.5 rounded-full hover:bg-gold/10 transition">
+            Respond
+          </button>
+        )}
       </div>
     </li>
   );

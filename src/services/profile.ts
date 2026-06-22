@@ -2,6 +2,8 @@ import { supabase } from "@/lib/supabase";
 import type { Database } from "@/types/database.types"; // Adjust path if your types are located elsewhere
 
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
+type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 export async function getProfileByAddress(address: string): Promise<ProfileRow | null> {
   try {
@@ -37,7 +39,7 @@ export async function getAllProfiles(): Promise<any[]> {
   }
 }
 
-export async function saveProfile(profileData: Database["public"]["Tables"]["profiles"]["Insert"]): Promise<void> {
+export async function saveProfile(profileData: ProfileInsert): Promise<void> {
   try {
     const { error } = await supabase.from("profiles").insert(profileData);
     if (error) {
@@ -48,7 +50,7 @@ export async function saveProfile(profileData: Database["public"]["Tables"]["pro
   }
 }
 
-export async function updateProfile(address: string, profileData: Database["public"]["Tables"]["profiles"]["Update"]): Promise<void> {
+export async function updateProfile(address: string, profileData: ProfileUpdate): Promise<void> {
   try {
     const { error } = await supabase
       .from("profiles")

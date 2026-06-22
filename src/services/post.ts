@@ -51,9 +51,32 @@ export async function updatePost(postData: PostUpdate) {
   }
 }
 
+export async function deletePost(id: string, txid_deleted: string) {
+  try {
+
+    console.log({id, txid_deleted})
+
+    const { data, error } = await supabase
+      .from("posts")
+      .update({ deleted: true, txid: txid_deleted })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error deleting post:", error);
+      return { error, data: null };
+    }
+    return { error: null, data };
+  } catch (err) {
+    console.error("Exception when deleting post:", err);
+    return { error: err, data: null };
+  }
+}
+
 export async function getPosts(filters?: { city?: string; type?: 'REQUEST' | 'OFFER' }) {
   try {
-    let query = supabase.from("posts").select("*").order("created_at", { ascending: false });
+    let query = supabase.from("posts").select("*").eq("deleted", false).order("created_at", { ascending: false });
 
     if (filters?.city) query = query.ilike("city", filters.city);
     if (filters?.type) query = query.eq("type", filters.type);

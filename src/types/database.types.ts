@@ -68,6 +68,8 @@ export interface Database {
           city: string
           message: string
           txid: string
+          deleted: boolean
+          notice_id: string | null
         }
         Insert: {
           id?: string
@@ -77,12 +79,15 @@ export interface Database {
           city: string
           message: string
           txid: string
+          notice_id: string
         }
         Update: {
           id?: string
           type?: 'REQUEST' | 'OFFER'
           city?: string
           message?: string
+          txid?: string
+          deleted?: boolean
         }
         Relationships: []
       }

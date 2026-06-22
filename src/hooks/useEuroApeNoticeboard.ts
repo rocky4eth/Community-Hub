@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { decodeEventLog } from "viem";
 
 // IMPORTANT: Replace this with your deployed EuroApeNoticeboard contract address
 export const EURO_APE_NOTICEBOARD_ADDRESS = "0xeA3A88d36Ba4699c26ac9D44EEe5A1b34890D7eb";
@@ -124,6 +126,56 @@ export const EURO_APE_NOTICEBOARD_ABI = [
     stateMutability: "view",
     type: "function"
   },
+  {
+    inputs: [
+      {
+        "internalType": "uint256",
+        "name": "noticeId",
+        "type": "uint256"
+      }
+    ],
+    name: "closeNotice",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "author",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum EuroApeNoticeboard.NoticeType",
+        "name": "noticeType",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "city",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      }
+    ],
+    "name": "NoticeCreated",
+    "type": "event"
+  },
 ] as const;
 
 export enum NoticeType {
@@ -136,10 +188,31 @@ export enum NoticeType {
 export function useEuroApeNoticeboard() {
   const { data: hash, writeContract, isPending, error } = useWriteContract();
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+  const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
       hash,
     });
+
+  // Extract the noticeId from the emitted event once confirmed
+  const createdNoticeId = useMemo(() => {
+    if (!receipt) return null;
+    for (const log of receipt.logs) {
+      try {
+        const decoded = decodeEventLog({
+          abi: EURO_APE_NOTICEBOARD_ABI,
+          data: log.data,
+          topics: log.topics,
+        });
+        if (decoded.eventName === "NoticeCreated") {
+          const args = decoded.args as { id: bigint };
+          return args.id.toString(); // Return as string
+        }
+      } catch (err) {
+        // Ignore logs that don't match our contract or event
+      }
+    }
+    return null;
+  }, [receipt]);
 
   const handleCreateNotice = (noticeType: NoticeType, city: string, metadataURI: string) => {
     // Fallbacks to prevent smart contract reverts if it forbids empty strings
@@ -163,14 +236,28 @@ export function useEuroApeNoticeboard() {
     });
   };
 
+  const handleCloseNotice = (noticeId: bigint) => {
+
+    console.log({noticeId});
+
+    writeContract({
+      address: EURO_APE_NOTICEBOARD_ADDRESS,
+      abi: EURO_APE_NOTICEBOARD_ABI,
+      functionName: "closeNotice",
+      args: [noticeId],
+    });
+  };
+
   return {
     createNotice: handleCreateNotice,
     updateNotice: handleUpdateNotice,
+    closeNotice: handleCloseNotice,
     isPending,
     isConfirming,
     isConfirmed,
     error,
     hash,
+    createdNoticeId,
   };
 }
 
