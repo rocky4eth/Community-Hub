@@ -19,6 +19,7 @@ export function BoardScreen() {
   const [userCity, setUserCity] = useState("London");
   const { createNotice, isPending, isConfirming, isConfirmed, error, hash } = useEuroApeNoticeboard();
   const [pendingPost, setPendingPost] = useState<{ type: string; city: string; message: string } | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     const fetchedPosts = await getPosts();
@@ -60,7 +61,7 @@ export function BoardScreen() {
           setComposeOpen(false);
         } else {
           console.error(dbError);
-          alert("Failed to create post in database.");
+          setAlertMessage("Failed to create post in database.");
         }
         setPendingPost(null);
       };
@@ -113,7 +114,18 @@ export function BoardScreen() {
       </ul>
 
       <button
-        onClick={() => setComposeOpen(true)}
+        onClick={() => {
+          if (!address) {
+            setAlertMessage("Please connect your wallet to post.");
+            return;
+          }
+          const userProfile = profiles[address.toLowerCase()];
+          if (!userProfile?.verified) {
+            setAlertMessage("You must be a verified Ape to post on the Noticeboard.");
+            return;
+          }
+          setComposeOpen(true);
+        }}
         className="fixed bottom-4 left-4 z-30 h-12 w-12 rounded-full bg-gold text-background flex items-center justify-center gold-glow pulse-gold"
         aria-label="New post"
       >
@@ -127,7 +139,7 @@ export function BoardScreen() {
           isSubmitting={isPending || isConfirming || pendingPost !== null}
           onSubmit={(p) => {
             if (!address) {
-              alert("Please connect your wallet to post.");
+              setAlertMessage("Please connect your wallet to post.");
               return;
             }
             
@@ -136,6 +148,21 @@ export function BoardScreen() {
             setPendingPost(p);
           }}
         />
+      )}
+
+      {alertMessage && (
+        <div className="fixed inset-0 z-[60] bg-background/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-[320px] card-surface p-6 animate-fade-up grain relative text-center flex flex-col items-center">
+            <h3 className="font-display text-2xl text-gold mb-3">Notice</h3>
+            <p className="text-sm text-foreground/90 mb-6">{alertMessage}</p>
+            <button
+              onClick={() => setAlertMessage(null)}
+              className="w-full bg-gold text-background font-semibold text-sm tracking-[0.14em] uppercase py-2.5 rounded-full hover:opacity-90 transition gold-glow"
+            >
+              Okay
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

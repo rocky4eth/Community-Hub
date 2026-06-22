@@ -145,7 +145,7 @@ export function useEuroApeNoticeboard() {
     // Fallbacks to prevent smart contract reverts if it forbids empty strings
     const safeMetadataURI = metadataURI && metadataURI.trim() !== "" ? metadataURI : "ipfs://placeholder";
     const safeCity = city && city.trim() !== "" ? city : "Unknown";
-    
+
     writeContract({
       address: EURO_APE_NOTICEBOARD_ADDRESS,
       abi: EURO_APE_NOTICEBOARD_ABI,
