@@ -4,16 +4,12 @@ import { cities } from "@/lib/mockData";
 import { ApeAvatar } from "./ApeAvatar";
 import { Copy, MapPin, Handshake, Pencil } from "lucide-react";
 import { useEuroApeProfile } from "@/hooks/useEuroApeProfile";
-import {getProfileByAddress, updateProfile} from "@/services/profile";
+import {getProfileByAddress, ProfileRow, updateProfile} from "@/services/profile";
 import { ProfilePopup } from "./ProfilePopup";
 
 export function ProfileScreen() {
-  const [guide, setGuide] = useState(true);
-  const [bio, setBio] = useState("");
+  const [profile, setProfile] = useState({} as ProfileRow);
   const [copied, setCopied] = useState(false);
-  const [stats, setStats] = useState({ connections: 0, answered: 0, cities: 0 });
-  const [name, setName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
   const { address } = useAccount();
@@ -28,18 +24,8 @@ export function ProfileScreen() {
     const fetchSupabaseProfile = async () => {
       if (!address) return;
 
-      const data = await getProfileByAddress(address);
-      if (data) {
-        setName(data.name || "");
-        setBio(data.bio || "");
-        setGuide(data.guide ?? false);
-        setAvatarUrl(data.avatar_url || "");
-        setStats({
-          connections: data.connections || 0,
-          answered: data.answered || 0,
-          cities: data.cities || 0,
-        });
-      }
+      const profileFromDb = await getProfileByAddress(address);
+      setProfile(profileFromDb as ProfileRow)
     };
 
     fetchSupabaseProfile();
@@ -48,7 +34,7 @@ export function ProfileScreen() {
   const displayCity = cities.find((c) => c.name === city) || { name: city, country, flag: "🌍" };
   const displayAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
 
-  if (!address || !name) {
+  if (!address || !profile.name) {
     return (
       <div className="flex-1 flex items-center justify-center text-center p-4">
         <div>
@@ -63,7 +49,7 @@ export function ProfileScreen() {
     <div className="flex-1 animate-fade-up pb-24 px-4">
       <div className="flex flex-col items-center text-center mt-2">
         <div className="relative group cursor-pointer">
-          <ApeAvatar imageUrl={avatarUrl} size={96} />
+          <ApeAvatar imageUrl={profile.avatar_url || ""} size={96} />
           <div 
             onClick={() => setIsEditing(true)}
             className="absolute bottom-0 right-0 bg-background border border-gold/30 h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground group-hover:text-gold group-hover:border-gold/60 transition-all shadow-xl"
@@ -71,7 +57,7 @@ export function ProfileScreen() {
             <Pencil size={14} />
           </div>
         </div>
-        <h2 className="font-display text-3xl mt-4">{name}</h2>
+        <h2 className="font-display text-3xl mt-4">{profile.name}</h2>
         <button
           onClick={() => { if (address) { navigator.clipboard?.writeText(address); setCopied(true); setTimeout(() => setCopied(false), 1500); } }}
           className="mt-2 inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-gold"
@@ -92,11 +78,11 @@ export function ProfileScreen() {
         </div>
         <button
           disabled={true}
-          className={`relative w-12 h-7 rounded-full transition ${guide ? "bg-gold" : "bg-surface-2"}`}
+          className={`relative w-12 h-7 rounded-full transition ${profile.guide ? "bg-gold" : "bg-surface-2"}`}
         >
           <span
             className="absolute top-0.5 h-6 w-6 rounded-full bg-background transition"
-            style={{ left: guide ? "22px" : "2px" }}
+            style={{ left: profile.guide ? "22px" : "2px" }}
           />
         </button>
       </div>
@@ -104,8 +90,7 @@ export function ProfileScreen() {
       <div className="card-surface p-4 mt-3">
         <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Bio</p>
         <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
+          value={profile.bio || ""}
           placeholder="Tell us about yourself..."
           rows={3}
           className="mt-2 w-full bg-transparent text-sm resize-none focus:outline-none"
@@ -148,9 +133,9 @@ export function ProfileScreen() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mt-5">
         {[
-          { label: "Connections", value: stats.connections },
-          { label: "Answered", value: stats.answered },
-          { label: "Cities", value: stats.cities },
+          { label: "Connections", value: profile.connections || 0 },
+          { label: "Answered", value: profile.answered || 0 },
+          { label: "Cities", value: profile.cities || 0 },
         ].map((s) => (
           <div key={s.label} className="card-surface p-3 text-center">
             <p className="font-display text-2xl text-gold">{s.value}</p>
@@ -163,11 +148,12 @@ export function ProfileScreen() {
         <ProfilePopup
           isEditing={true}
           existingData={{
-            name,
+            name: profile.name,
             city,
             country,
-            bio,
-            guide
+            bio: profile.bio || "",
+            guide: profile.guide || false,
+            twitter: profile.twitter || ""
           }}
           onClose={() => setIsEditing(false)}
           onSubmit={async (profileData) => {
@@ -178,13 +164,15 @@ export function ProfileScreen() {
               city: profileData.city,
               country: profileData.country,
               bio: profileData.bio,
-              guide: profileData.guide || false
+              guide: profileData.guide || false,
+              twitter: profileData.twitter
             });
 
-            setBio(profileData.bio);
-            setName(profileData.name);
-            setGuide(profileData.guide);
             setCity(profileData.city);
+            setProfile({
+              ...profile,
+              ...profileData,
+            })
 
             setIsEditing(false);
           }}

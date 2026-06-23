@@ -119,7 +119,8 @@ export function MapScreen() {
               wallet_address: submittedData.wallet_address?.toLowerCase() || "",
               metadata_uri: submittedData.metadata_uri || "",
               avatar_url: submittedData.avatar_url,
-              txid: submittedData.txid || ""
+              txid: submittedData.txid || "",
+              twitter: submittedData.twitter || ""
             });
 
             fetchProfiles();

@@ -4,7 +4,7 @@ import { cities, timeAgo } from "@/lib/mockData";
 import { ApeAvatar } from "./ApeAvatar";
 import { Plus, X } from "lucide-react";
 import { getPosts, savePost, deletePost } from "@/services/post";
-import { getAllProfiles } from "@/services/profile";
+import {getAllProfiles, ProfileRow} from "@/services/profile";
 import { fetchNftMetadataImage } from "@/lib/metadata";
 import {NoticeType, useEuroApeNoticeboard} from "@/hooks/useEuroApeNoticeboard";
 
@@ -14,7 +14,7 @@ export function BoardScreen() {
   const { address } = useAccount();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [posts, setPosts] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, any>>({});
+  const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
   const [composeOpen, setComposeOpen] = useState(false);
   const [userCity, setUserCity] = useState("London");
   const { createNotice, closeNotice, isPending, isConfirming, isConfirmed, error, hash, createdNoticeId } = useEuroApeNoticeboard();
@@ -141,6 +141,14 @@ export function BoardScreen() {
                 setDeletingPost(p);
                 closeNotice(BigInt(p.notice_id || 0)); // Replace notice_id with your numeric on-chain ID field
               }}
+              onRespond={() => {
+                if (profile?.twitter) {
+                  const handle = profile.twitter.replace(/^@/, "");
+                  window.open(`https://x.com/${handle}`, "_blank", "noopener,noreferrer");
+                } else {
+                  setAlertMessage("This user has not provided a Twitter handle.");
+                }
+              }}
             />
           );
         })}
@@ -203,14 +211,15 @@ export function BoardScreen() {
 
 type PostItemParams = {
   post: any;
-  profile: any;
+  profile: ProfileRow;
   index: number;
   isAuthor: boolean;
   isDeleting: boolean;
   onDelete: () => void
+  onRespond: () => void;
 }
 
-function PostItem({ post, profile, index, isAuthor, isDeleting, onDelete }: PostItemParams) {
+function PostItem({ post, profile, index, isAuthor, isDeleting, onDelete, onRespond }: PostItemParams) {
   const isReq = post.type === "REQUEST";
   const [avatarUrl, setAvatarUrl] = useState("");
 
@@ -262,7 +271,10 @@ function PostItem({ post, profile, index, isAuthor, isDeleting, onDelete }: Post
           </button>
         )}
         {!isAuthor && (
-          <button className="text-xs tracking-[0.16em] uppercase border border-gold/50 text-gold px-3 py-1.5 rounded-full hover:bg-gold/10 transition">
+          <button 
+            onClick={onRespond}
+            className="text-xs tracking-[0.16em] uppercase border border-gold/50 text-gold px-3 py-1.5 rounded-full hover:bg-gold/10 transition"
+          >
             Respond
           </button>
         )}

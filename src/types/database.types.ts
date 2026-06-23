@@ -26,6 +26,7 @@ export interface Database {
           cities: number | null
           avatar_url: string | null
           txid: string
+          twitter: string | null
         }
         Insert: {
           id?: string
@@ -43,6 +44,7 @@ export interface Database {
           cities?: number | null
           avatar_url?: string | null
           txid: string
+          twitter?: string | null
         }
         Update: {
           city?: string
@@ -56,6 +58,7 @@ export interface Database {
           answered?: number | null
           cities?: number | null
           avatar_url?: string | null
+          twitter?: string | null
         }
         Relationships: []
       }

@@ -13,6 +13,7 @@ export type ProfileSubmissionData = {
   metadata_uri?: string;
   avatar_url?: string;
   txid?: string;
+  twitter?: string;
 };
 
 type ProfilePopupParams = {
@@ -27,6 +28,7 @@ export function ProfilePopup({ isEditing = false, existingData, onClose, onSubmi
   const [bio, setBio] = useState(existingData?.bio || "");
   const [guide, setGuide] = useState(existingData?.guide ?? false);
   const [name, setName] = useState(existingData?.name || "");
+  const [twitter, setTwitter] = useState(existingData?.twitter || "");
 
   const selectedCityData = cities.find((c) => c.name === city);
   const country = selectedCityData?.country || "Unknown";
@@ -62,6 +64,14 @@ export function ProfilePopup({ isEditing = false, existingData, onClose, onSubmi
           className="mt-1 w-full bg-background border border-border rounded-md px-3 py-2 text-sm resize-none"
           placeholder="Tell us a bit about yourself..."
         />
+        <label className="block mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Twitter</label>
+        <input
+          type="text"
+          value={twitter}
+          onChange={(e) => setTwitter(e.target.value)}
+          className="mt-1 w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none"
+          placeholder="@yourhandle"
+        />
         <div className="card-surface p-4 mt-6 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">City Guide</p>
@@ -84,7 +94,8 @@ export function ProfilePopup({ isEditing = false, existingData, onClose, onSubmi
             country,
             bio,
             guide,
-            name
+            name,
+            twitter
           }}
           onComplete={onSubmit}
         />
